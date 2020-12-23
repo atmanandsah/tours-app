@@ -12,7 +12,7 @@ const { findByIdAndUpdate } = require('./../models/tourModel');
 //     }
 //     next();
 // }
-
+  
 // exports.checkBody = (req,res,next) => {
 //     if(!req.body.name || !req.body.price){
 //         return res.status(400).json({
@@ -22,6 +22,13 @@ const { findByIdAndUpdate } = require('./../models/tourModel');
 //     }
 //     next();
 // }
+
+exports.aliasTopTours = (req,res,next) => {
+    req.query.limit = '5';
+    req.query.sort = '-ratingsAverage, price';
+    req.query.field = 'name,price,ratingsAverage,summary,difficulty';
+    next();
+}
 
 exports.getAllTours = async (req,res) => {
     // console.log(req.requestTime);
@@ -40,10 +47,32 @@ exports.getAllTours = async (req,res) => {
         
         // 2. Sorting
         if(req.query.sort){
-            query = query.sort(req.query.sort);
+            const sortBy = req.query.sort.split(',').join(' ');
+            query = query.sort(sortBy);
         }
         else{
-            
+            query = query.sort('-createdAt');
+        }
+
+        //3) field limiting
+        if(req.query.field){
+            const field = req.query.field.split(',').join(' ');
+            query = query.select(field);
+        }
+        else{
+            query = query.select('-__v');
+        }
+
+        // 4 . pagination
+        const page = req.query.page *1 || 1;
+        const limit = req.query.limit *1 || 100;
+        const skip = (page-1) * limit;
+        query = query.skip(skip).limit(limit);
+        if(req.query.page){
+            const numTours = await Tour.countDocuments();
+            if(skip >= numTours){
+                throw new err('this page is no avaliable');
+            }
         }
        
 
