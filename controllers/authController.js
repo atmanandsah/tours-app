@@ -71,7 +71,7 @@ exports.protect = catchAsync(async (req,res,next) => {
     }
 
     //2. Verification token
-    const decode = await jwt.verify(token,'here-is-my-secret')
+    const decode =  jwt.verify(token,'here-is-my-secret')
     console.log('decoding =================>',decode)
     //3. Check if user still exists
 
